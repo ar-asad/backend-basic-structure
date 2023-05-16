@@ -94,7 +94,7 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/bookings', verifyJWT, verifyAdmin, async (req, res) => {
+        app.get('/bookings', verifyJWT, async (req, res) => {
             const email = req.query.email
             const decodedEmail = req.decoded;
             if (decodedEmail.email !== email) {
@@ -166,13 +166,13 @@ async function run() {
             const query = { email: email }
             const user = await userCollection.findOne(query);
             if (user) {
-                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '10d' })
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN)
                 return res.send({ accessToken: token });
             }
             res.status(403).send({ accessToken: '' })
         });
 
-        app.get('/users', async (req, res) => {
+        app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
             const query = {}
             const users = await userCollection.find(query).toArray();
             res.send(users)
@@ -191,7 +191,7 @@ async function run() {
             res.send({ isAdmin: user?.role === 'admin' })
         })
 
-        app.put('/users/admin/:id', verifyJWT, async (req, res) => {
+        app.put('/users/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
             // const decodedEmail = req.decoded.email;
             // const query = { email: decodedEmail }
             // const user = await userCollection.findOne(query)
@@ -208,8 +208,16 @@ async function run() {
                 }
             }
             const result = await userCollection.updateOne(filter, updatedDoc, options)
-            res.send(result)
+            res.send(result);
+
         });
+
+        app.delete('/users/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await userCollection.deleteOne(filter);
+            res.send(result);
+        })
 
 
 
@@ -243,7 +251,7 @@ async function run() {
 
         app.delete('/doctors/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
-            const filter = { _id: ObjectId };
+            const filter = { _id: ObjectId(id) };
             const result = await doctorCollection.deleteOne(filter);
             res.send(result);
         })
