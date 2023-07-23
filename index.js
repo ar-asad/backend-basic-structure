@@ -35,13 +35,11 @@ function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization
     if (!authHeader) {
         return res.status(401).send({ message: 'unathorized access ' })
-        // console.log('header valid na')
     }
     const token = authHeader.split(' ')[1];
     jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
         if (err) {
             return res.status(403).send({ message: 'unathorized access' })
-            // console.log('token valid na')
         }
         req.decoded = decoded;
         next();
@@ -218,24 +216,6 @@ async function run() {
             const result = await userCollection.deleteOne(filter);
             res.send(result);
         })
-
-
-
-        // temporary only for added price
-        // app.get('/addprice', async (req, res) => {
-        //     const filter = {};
-        //     const options = { upsert: true }
-        //     const updatedDoc = {
-
-        //         $set: {
-        //             price: 99
-        //         }
-        //     }
-        //     const result = await appointmentCollection.updateMany(filter, updatedDoc, options)
-        //     res.send(result)
-        // })
-
-
 
         app.get('/doctors', verifyJWT, verifyAdmin, async (req, res) => {
             const query = {};
